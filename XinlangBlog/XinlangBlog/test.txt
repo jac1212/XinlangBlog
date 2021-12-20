@@ -1,0 +1,113 @@
+﻿using NHtmlUnit;
+using NHtmlUnit.Html;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace XinlangBlog
+{
+    class test
+    {
+        static void Main(string[] args)
+        {
+            //新浪微博登录页面
+            string baseUrl = "https://passport.weibo.cn/signin/login?entry=mweibo&res=wel&wm=3349&r=http%3A%2F%2Fm.weibo.cn%2F";
+            //string baseUrl = "https://m.weibo.cn";
+            //string baseUrl = "https://weibo.com/";
+            //string baseUrl = "https://m.weibo.cn/compose/";
+            //string baseUrl = "http://app.zhifeishengwu.com:9090/sys/login.aspx";
+            //string baseUrl = "http://app.zhifeishengwu.com:9090/carweb/openimage.html?fnumber=190122001";
+
+            WebClient client = new WebClient(BrowserVersion.CHROME);
+            //屏蔽日志信息
+            
+            //代理服务器的配置
+            //WebClient webClient = new WebClient(BrowserVersion.CHROME, "http://127.0.0.1", 8087);
+            //com.gargoylesoftware.htmlunit.DefaultCredentialsProvider credentialsProvider = (com.gargoylesoftware.htmlunit.DefaultCredentialsProvider)webClient.CredentialsProvider;
+            //credentialsProvider.addCredentials("username", "password");
+
+            client.Options.JavaScriptEnabled = true;
+            client.Options.CssEnabled = false;
+            client.Options.RedirectEnabled = true;
+            client.Options.ThrowExceptionOnScriptError = false;
+            client.Options.ThrowExceptionOnFailingStatusCode = false;
+            client.Options.ActiveXNative = false;
+            client.AjaxController = new NicelyResynchronizingAjaxController();
+
+            client.Options.Timeout = 5000;
+            client.WaitForBackgroundJavaScript(5000);
+            client.AddRequestHeader("User-Agent", "Mozilla/5.0 (iPad; CPU OS 7_0_2 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11A501 Safari/9537.53");
+            
+            HtmlPage page = client.GetHtmlPage(baseUrl);
+            //client.WaitForBackgroundJavaScript(10000);
+            client.WaitForBackgroundJavaScriptStartingBefore(10000);
+
+            //string str = client.GetHtmlPage(baseUrl).AsXml();
+
+            //等待页面加载
+            Thread.Sleep(3000);
+            HtmlInput user = (HtmlInput)page.GetElementById("loginName");
+            user.Focus();
+            user.SetValueAttribute("18883269851");
+            HtmlInput pwd = (HtmlInput)page.GetElementById("loginPassword");
+            pwd.Focus();
+            pwd.SetValueAttribute("can18883269851");
+
+            //点击登录
+            //DomElement button = page.GetElementById("loginAction");
+            //page = (HtmlPage)button.Click();
+
+            DomElement button = (DomElement)page.GetElementById("loginAction");
+            button.Focus();
+            page = (HtmlPage)button.Click();
+            Console.Out.WriteLine("登陆成功！");
+
+            //等待页面加载
+            Thread.Sleep(3000);
+            ////获取到“写微博”这个按钮，因为这个按钮没有name和id,获取所有<a>标签
+            //DomNodeList<DomElement> button2 = page.GetElementById("a");
+            
+            ////跳转到发送微博页面    
+            //page = (HtmlPage)button2.get(4).click();
+            page = client.GetHtmlPage("https://weibo.com/");
+        
+            //等待页面加载
+            Thread.Sleep(3000);
+
+            //获取发送控件 标签为<a>中的2个
+            //DomNodeList<DomElement> button3 = page.GetElementById("a");
+            //DomElement button3 = (HtmlButton)page.GetElementById("a");
+
+            DomElement button3 = (DomElement)page.GetElementByClassName("W_btn_a");
+
+            
+            //获取文本宇
+            //HtmlTextArea content = (HtmlTextArea)page.GetElementById("txt-publisher");
+            HtmlTextArea content = (HtmlTextArea)page.GetElementByClassName("input").FirstElementChild;
+
+            //DomElement fasong = button3.get(1);
+            DomElement fasong = button3;
+
+            content.Focus();
+            //Date date = new Date();
+            DateTime date = DateTime.Now;
+
+            //填写你要发送的内容
+            //content.setText("使用JAVA发送微博！！！！\n" + date);
+            content.Text = "ss使用JAVA发送微博！！！！\n" + date;
+            Thread.Sleep(3000);
+            //fasong.Focus();
+            fasong.SetAttribute("class", "W_btn_a btn_30px");
+            Thread.Sleep(3000);
+            //发送！！！
+            page = (HtmlPage)fasong.Click();
+
+            Thread.Sleep(5000);
+
+            Console.Out.WriteLine(page.AsText());
+        }
+    }
+}

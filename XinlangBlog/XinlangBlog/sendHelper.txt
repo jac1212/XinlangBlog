@@ -1,0 +1,96 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO;
+using LeoShi.Soft.OpenSinaAPI;
+using System.Web;
+using System.Threading;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace XinlangBlog
+{
+    class sendHelper
+    {
+        JArray userInfoList = new JArray();
+        int times = 0;
+        
+        public void  loadData()
+        {
+            JObject obj = new JObject();
+            //obj["username"] = "18883269851";
+            //obj["password"] = "can18883269851";
+            obj["username"] = "ning_jackchen@163.com";
+            obj["password"] = "745201314";
+            userInfoList.Add(obj);
+
+
+            //var httpRequest = HttpRequestFactory.CreateHttpRequest(Method.GET) as HttpGet;
+            //httpRequest.GetRequestToken();
+            //string url = httpRequest.GetAuthorizationUrl();
+            //GlobalInfo.requestTokens[0] = httpRequest.Token;
+            //GlobalInfo.requesTokenSecrets[0] = httpRequest.TokenSecret;
+            //httpRequest.GetVerifier(userInfoList[0]["username"].ToString(), userInfoList[0]["password"].ToString(), 0);
+            //httpRequest.GetAccessToken();
+            //GlobalInfo.requestTokens[0] = httpRequest.Token;
+            //GlobalInfo.requesTokenSecrets[0] = httpRequest.TokenSecret;
+
+            //var httpRequest2 = HttpRequestFactory.CreateHttpRequest(Method.POST);
+            //httpRequest2.Token = GlobalInfo.requestTokens[0];
+            //httpRequest2.TokenSecret = GlobalInfo.requesTokenSecrets[0];
+            //var sendUrl = "http://api.t.sina.com.cn/statuses/update.xml?";
+            //httpRequest2.Request(sendUrl, "status=" + HttpUtility.UrlEncode("微博内容"));
+
+
+            initSina();
+        }
+        private void initSina()
+        {
+            for (int x = 0; x < userInfoList.Count; x++)
+            {
+                if (userInfoList[x]["username"].ToString() == "")
+                    break;
+                var httpRequest = HttpRequestFactory.CreateHttpRequest(Method.GET) as HttpGet;
+                httpRequest.GetRequestToken();
+                string url = httpRequest.GetAuthorizationUrl();
+                GlobalInfo.requestTokens[x] = httpRequest.Token;
+                GlobalInfo.requesTokenSecrets[x] = httpRequest.TokenSecret;
+                httpRequest.GetVerifier(userInfoList[x]["username"].ToString(), userInfoList[x]["password"].ToString(), x);
+                httpRequest.GetAccessToken();
+                GlobalInfo.requestTokens[x] = httpRequest.Token;
+                GlobalInfo.requesTokenSecrets[x] = httpRequest.TokenSecret;
+            }
+            start();
+        }
+        private void start()
+        {
+            Thread sendWeiboThread = new Thread(new ThreadStart(sendWeibo));
+            sendWeiboThread.Start();
+        }
+        private void sendWeibo()
+        {
+            Thread.CurrentThread.IsBackground = true;
+            Control.CheckForIllegalCrossThreadCalls = false;
+           
+            for (int m = 0; m < int.Parse(10+""); m++)
+            {
+                times++;
+                for (int x = 0; x < userInfoList.Count; x++)
+                {
+                    var httpRequest2 = HttpRequestFactory.CreateHttpRequest(Method.POST);
+                    httpRequest2.Token = GlobalInfo.requestTokens[x];
+                    httpRequest2.TokenSecret = GlobalInfo.requesTokenSecrets[x];
+                    var sendUrl = "http://api.t.sina.com.cn/statuses/update.xml?";
+                    httpRequest2.Request(sendUrl, "status=" + HttpUtility.UrlEncode("微博内容" + "  " + times.ToString()));
+                    Thread.Sleep(150);
+                }
+            }
+        }
+    }
+}
